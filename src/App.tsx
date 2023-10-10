@@ -38,7 +38,7 @@ const App = () => {
     },
   ])
 
-  //New Note inputs handlers + hooks
+  //Add New Note inputs handlers + hooks
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
@@ -67,27 +67,28 @@ const App = () => {
     setContent(note.content);
 
   }
-  //Save the updated note
+  //Updat note
   const handleUpdateNote = (event: React.FormEvent) => {
     event.preventDefault();
-    if(!selectedNote){
+    if (!selectedNote) {
       return;
     };
 
     const updatedNote: Note = {
       id: selectedNote.id,
-      title: selectedNote.title,
-      content: selectedNote.content,
+      title: title,
+      content: content,
     };
 
     const updatedNotesList = notes.map((note) => (note.id === selectedNote.id ? updatedNote : note));
 
     setNotes(updatedNotesList);
+    
     setTitle("");
     setContent("");
     setSelectedNote(null);
   };
-  
+
   //Handle to avoid changes
   const handleCancel = () => {
     setTitle("");
@@ -95,34 +96,51 @@ const App = () => {
     setSelectedNote(null);
   }
 
+  //Delete notes
+  const deleteNote = (event: React.MouseEvent, noteId: number) => {
+    event.stopPropagation();    //This prevents the parent handler from being executed.
+
+    const updatedNotes = notes.filter((note) => note.id !== noteId);
+
+    setNotes(updatedNotes);
+  }
+
   return (
     <div className="app-container">
-      <form onSubmit={handleAddNote} className="note-form">
+      <form className="note-form"
+        onSubmit={(event) => (selectedNote ? handleUpdateNote(event) : handleAddNote(event))} >
         <input
           value={title}
-          onChange={(event) => setTitle(event.target.value)} 
-          type="text" 
-          className="note-title" 
-          placeholder="Title" 
+          onChange={(event) => setTitle(event.target.value)}
+          type="text"
+          className="note-title"
+          placeholder="Title"
           required />
         <textarea
-        value={content}
-          onChange={(event) => setContent(event.target.value)} 
-          name="content" 
-          id="content" 
-          rows={10} 
+          value={content}
+          onChange={(event) => setContent(event.target.value)}
+          name="content"
+          id="content"
+          rows={10}
           required />
-        <button type="submit">Submit</button>
+        {selectedNote ? (
+          <div className="edit-buttons">
+            <button type="submit">Save</button>
+            <button onClick={handleCancel}>Cancel</button>
+          </div>
+        ) : (
+          <button type="submit">Add Note</button>
+        )}
       </form>
       <div className="notes-grid">
         {notes.map((note) => (
-        <div className="note-item" key={note.id} onClick={() => handleNoteclick(note)}>
-          <div className="notes-header">
-            <button>x</button>
+          <div className="note-item" key={note.id} onClick={() => handleNoteclick(note)}>
+            <div className="notes-header">
+              <button onClick={(event) => deleteNote(event, note.id)}>x</button>
+            </div>
+            <h2>{note.title}</h2>
+            <p>{note.content}</p>
           </div>
-          <h2>{note.title}</h2>
-          <p>{note.content}</p>
-        </div>
         ))}
       </div>
     </div>
