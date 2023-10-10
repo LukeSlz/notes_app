@@ -1,44 +1,29 @@
 import './App.scss';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Note from './interfaces/Note';
 
 const App = () => {
 
-  //Notes DB + hook
-  const [notes, setNotes] = useState<Note[]>([
-    {
-      id: 1,
-      title: "test note 1",
-      content: "bla bla note1",
-    },
-    {
-      id: 2,
-      title: "test note 2 ",
-      content: "bla bla note2",
-    },
-    {
-      id: 3,
-      title: "test note 3",
-      content: "bla bla note3",
-    },
-    {
-      id: 4,
-      title: "test note 4 ",
-      content: "bla bla note4",
-    },
-    {
-      id: 5,
-      title: "test note 5",
-      content: "bla bla note5",
-    },
-    {
-      id: 6,
-      title: "test note 6",
-      content: "bla bla note6",
-    },
-  ])
+  useEffect(() => {
+    //React doesn't support async hooks, so it's necessary to make it asyn inside
+    const fetchNotes = async () => {
+      try {   //Handle potential errors
+        const response = await fetch("http://localhost:5000/api/notes");    //API returns an array
+        const notes: Note[] = await response.json();                        //Convert response in Json.
 
-  //Add New Note inputs handlers + hooks
+        setNotes(notes);    //Change hardcoded notes for API response (in Json)
+      } catch (e) {
+        console.log(e);
+      }
+    };
+
+    fetchNotes();
+  }, []);   //empty dependency array to ensure that this code only runs once when the component is first mounted
+
+  //Notes DB + hook
+  const [notes, setNotes] = useState<Note[]>([]);
+
+  //ADD (POST) New Note inputs handlers + hooks
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
@@ -48,13 +33,33 @@ const App = () => {
     content: content,
   };
 
-  const handleAddNote = (event: React.FormEvent) => {
-    //Prevent page reload
+  const handleAddNote = async (event: React.FormEvent) => {
+    //Prevent reload
     event.preventDefault();
 
-    setNotes([newNote, ...notes]);
-    setTitle("");
-    setContent("");
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/notes",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title,
+            content,
+          }),
+        }
+      );
+
+      const newNote = await response.json();
+
+      setNotes([newNote, ...notes]);
+      setTitle("");
+      setContent("");
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   //Update Note handlers + hooks
@@ -83,7 +88,7 @@ const App = () => {
     const updatedNotesList = notes.map((note) => (note.id === selectedNote.id ? updatedNote : note));
 
     setNotes(updatedNotesList);
-    
+
     setTitle("");
     setContent("");
     setSelectedNote(null);
