@@ -1,0 +1,19 @@
+.ReactModal__Content {
+  button {
+    font-size: 1em;
+    margin: 0 10%;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+
+
+    &:first-of-type{
+      background-color: red;
+      color: white;
+
+      &:hover {
+        background-color: rgb(255, 111, 0);
+      }
+    }
+  }
+}

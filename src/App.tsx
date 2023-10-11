@@ -1,6 +1,7 @@
 import './App.scss';
 import { useEffect, useState } from 'react';
 import Note from './interfaces/Note';
+import ConfirmModal from './components/ConfirmModal';
 
 const App = () => {
 
@@ -26,12 +27,6 @@ const App = () => {
   //ADD (POST) New Note inputs handlers + hooks
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-
-  const newNote: Note = {
-    id: notes.length + 1,
-    title: title,
-    content: content,
-  };
 
   const handleAddNote = async (event: React.FormEvent) => {
     //Prevent reload
@@ -72,13 +67,25 @@ const App = () => {
     setContent(note.content);
 
   }
-  //Updat note
-  const handleUpdateNote = (event: React.FormEvent) => {
+  //Update note
+  const handleUpdateNote = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!selectedNote) {
       return;
     };
-
+    await fetch(
+      `http://localhost:5000/api/notes/${selectedNote.id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+          content,
+        }),
+      }
+    )
     const updatedNote: Note = {
       id: selectedNote.id,
       title: title,
@@ -102,12 +109,45 @@ const App = () => {
   }
 
   //Delete notes
-  const deleteNote = (event: React.MouseEvent, noteId: number) => {
-    event.stopPropagation();    //This prevents the parent handler from being executed.
+  const deleteNote = async (noteId: number) => {
+    //event.preventDefault();    //This prevents the parent handler from being executed.
 
-    const updatedNotes = notes.filter((note) => note.id !== noteId);
+    try {
+      await fetch(    //Because it's DELETE there's no need to assing the response to a variable.
+        `http://localhost:5000/api/notes/${noteId}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const updatedNotes = notes.filter((note) => note.id !== noteId);
 
-    setNotes(updatedNotes);
+      setNotes(updatedNotes);
+
+    } catch (e) {
+      console.log(e);
+    }
+  }
+  //Confirm Delete Modal
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState<number | null>(null);
+
+  const openModal = (event: React.MouseEvent, noteId: number) => {
+    event.stopPropagation();
+    setNoteToDelete(noteId);
+    setModalOpen(true);
+  };
+  const closeModal = () => {
+    setNoteToDelete(null);
+    setModalOpen(false);
+    setSelectedNote(null);
+    setTitle("");
+    setContent("");
+  }
+  const confirmDelete = () => {
+    if (noteToDelete) {
+      deleteNote(noteToDelete);
+      closeModal();
+    }
   }
 
   return (
@@ -139,15 +179,25 @@ const App = () => {
       </form>
       <div className="notes-grid">
         {notes.map((note) => (
-          <div className="note-item" key={note.id} onClick={() => handleNoteclick(note)}>
+          <div className="note-item"
+            key={note.id}
+            onClick={() => handleNoteclick(note)}
+          >
             <div className="notes-header">
-              <button onClick={(event) => deleteNote(event, note.id)}>x</button>
+              <button onClick={(e) => openModal(e, note.id)}>x</button>
             </div>
             <h2>{note.title}</h2>
             <p>{note.content}</p>
           </div>
         ))}
       </div>
+
+      
+      <ConfirmModal
+        isOpen={isModalOpen}
+        onRequestClose={closeModal}
+        onConfirmDelete={confirmDelete}
+      />
     </div>
   )
 }

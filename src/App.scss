@@ -23,6 +23,8 @@ body {
 }
 
 .note-item {
+  word-break: break-word;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   border: 1px solid #ccc;
