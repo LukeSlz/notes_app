@@ -5,11 +5,13 @@ import ConfirmModal from './components/ConfirmModal';
 
 const App = () => {
 
+  const NOTES_API = "https://notes-app-server-api.onrender.com/api/notes";
+
   useEffect(() => {
     //React doesn't support async hooks, so it's necessary to make it asyn inside
     const fetchNotes = async () => {
       try {   //Handle potential errors
-        const response = await fetch("http://localhost:5000/api/notes");    //API returns an array
+        const response = await fetch(NOTES_API);    //API returns an array
         const notes: Note[] = await response.json();                        //Convert response in Json.
 
         setNotes(notes);    //Change hardcoded notes for API response (in Json)
@@ -34,7 +36,7 @@ const App = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/notes",
+        NOTES_API,
         {
           method: "POST",
           headers: {
@@ -74,7 +76,7 @@ const App = () => {
       return;
     };
     await fetch(
-      `http://localhost:5000/api/notes/${selectedNote.id}`,
+      `${NOTES_API}/${selectedNote.id}`,
       {
         method: "PUT",
         headers: {
@@ -114,7 +116,7 @@ const App = () => {
 
     try {
       await fetch(    //Because it's DELETE there's no need to assing the response to a variable.
-        `http://localhost:5000/api/notes/${noteId}`,
+        `${NOTES_API}/${noteId}`,
         {
           method: "DELETE",
         }
